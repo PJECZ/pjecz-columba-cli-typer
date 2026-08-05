@@ -166,6 +166,10 @@ def _sintetizar_wav(texto: str, onnx: Path, velocidad: float) -> Path:
 # App FastAPI
 # -----------
 
+class Texto(BaseModel):
+    """Esquema para un texto sencillo"""
+    mensaje: str
+
 
 class Atencion(BaseModel):
     """Esquema para recibir una atención."""
@@ -261,26 +265,15 @@ def crear_app_fastapi() -> FastAPI:
     fastapi_app = FastAPI(
         title="Columba API",
         description="API para el vocero de la recepción.",
-        version="1.2.0",
+        version="1.3.0",
         lifespan=lifespan,
     )
 
     @fastapi_app.post("/hablar")
-    async def hablar_api(atencion: Atencion):
-        """Endpoint para recibir atenciones para hablar."""
-        redis: aioredis.Redis = fastapi_app.state.redis
-        item_key = f"{configuracion.VOCEAR_ITEM_PREFIJO}{uuid.uuid4().hex}"
-        payload = json.dumps(
-            {
-                "id": atencion.id,
-                "mensaje": atencion.mensaje,
-                "tiempo": atencion.tiempo,
-                "ttl_segundos": atencion.ttl_segundos,
-            }
-        )
-        await redis.set(item_key, payload, ex=configuracion.VOCEAR_TTL)
-        await redis.lpush(configuracion.VOCEAR_COLA, item_key)
-        return {"success": True, "message": f"Item: {item_key}"}
+    async def hablar_api(texto: Texto):
+        """Endpoint para vocear un texto de inmediato, sin pasar por la cola."""
+        await asyncio.to_thread(vocear_texto, texto.mensaje)
+        return {"success": True, "message": "Texto voceado."}
 
     @fastapi_app.post("/agregar")
     async def agregar_api(atencion: Atencion):
