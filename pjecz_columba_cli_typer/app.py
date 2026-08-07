@@ -15,7 +15,7 @@ from pathlib import Path
 import requests
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import BackgroundTasks, FastAPI
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
 from redis import asyncio as aioredis
@@ -270,9 +270,9 @@ def crear_app_fastapi() -> FastAPI:
     )
 
     @fastapi_app.post("/hablar")
-    async def hablar_api(texto: Texto):
+    async def hablar_api(texto: Texto, background_tasks: BackgroundTasks):
         """Endpoint para vocear un texto de inmediato, sin pasar por la cola."""
-        await asyncio.to_thread(vocear_texto, texto.mensaje)
+        background_tasks.add_task(vocear_texto, texto.mensaje)
         return {"success": True, "message": "Texto voceado."}
 
     @fastapi_app.post("/agregar")
