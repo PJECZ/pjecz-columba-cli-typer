@@ -5,6 +5,7 @@ PJECZ Columba CLI Typer App
 import asyncio
 import json
 import os
+import random
 import subprocess
 import tempfile
 import uuid
@@ -15,7 +16,7 @@ from pathlib import Path
 import requests
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import BackgroundTasks, FastAPI
+from fastapi import FastAPI
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
 from redis import asyncio as aioredis
@@ -265,14 +266,24 @@ def crear_app_fastapi() -> FastAPI:
     fastapi_app = FastAPI(
         title="Columba API",
         description="API para el vocero de la recepción.",
-        version="1.3.0",
+        version="1.3.1",
         lifespan=lifespan,
     )
 
     @fastapi_app.post("/hablar")
-    async def hablar_api(texto: Texto, background_tasks: BackgroundTasks):
-        """Endpoint para vocear un texto de inmediato, sin pasar por la cola."""
-        background_tasks.add_task(vocear_texto, texto.mensaje)
+    async def hablar_api(texto: Texto):
+        """Endpoint para recibir texto para hablar."""
+        redis: aioredis.Redis = fastapi_app.state.redis
+        item_key = f"{configuracion.VOCEAR_ITEM_PREFIJO}{uuid.uuid4().hex}"
+        payload = json.dumps(
+            {
+                "id": random.randint(1, 20000),
+                "mensaje": texto.mensaje,
+                "tiempo": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            }
+        )
+        await redis.set(item_key, payload, ex=configuracion.VOCEAR_TTL)
+        await redis.lpush(configuracion.VOCEAR_COLA, item_key)
         return {"success": True, "message": "Texto voceado."}
 
     @fastapi_app.post("/agregar")
