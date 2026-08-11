@@ -1,6 +1,6 @@
 [project]
 name = "pjecz-columba-cli-typer"
-version = "1.3.0"
+version = "1.3.1"
 description = "Voceador de la recepción."
 authors = ["guivaloz <guillermo.valdes@pjecz.gob.mx>", "ricval <ricardo.valdes@pjecz.gob.mx>"]
 readme = "README.md"
