@@ -3,6 +3,13 @@
 Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
+### [1.3.1] - 2026-08-11 (Trabajando)
+
+### 🐞 Arreglado
+
+- El _endpoint_ `hablar` solapaba los audios que llegaban muy seguidos. Se regresó a la solución anterior de encolamiento con `redis`, pero se conservo que el _payload_ solo pidiera el parámetro `mensaje`.
+
+
 ### [1.3.0] - 2026-08-10
 
 ### ✨ Mejoras
